@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <style>
+    *{margin:0;padding:0;}
+    #wrap{
+      width:1024px;
+      margin: 0 auto;
+    }
+    .on{
+      color:#aaa;
+      text-decoration: line-through;
+    }
+    .inline{
+      display: inline;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div class="panel panel-success">
+      <div class="panel-heading">
+        <h3>今天还有{{num}}件事未做</h3>
+        <input type="text" v-model="msg" @keyup.enter="add">
+      </div>
+      <div class="panel-body">
+        <ul class="list-group">
+          <li class="list-group-item" v-for="(item,index) in filterArr" @dblclick="db(index)">
+            <div class="inline" v-show="!item.isDB">
+                <input type="checkbox" v-model='item.isSelected'>
+                <label :class="{on:item.isSelected}">{{item.things}}</label>
+            </div>
+            <input type="text" v-show="item.isDB" v-model="item.things"@blur='ok(index)' v-focus @keyup="ok(index)">
+            <button @click="remove(index)" class="btn btn-danger btn-xs pull-right glyphicon glyphicon-remove-circle"></button>
+          </li>
+        </ul>
+      </div>
+      <div class="panel-footer">
+          <ul class="nav nav-pills">
+              <li role="presentation" :class="{active:hash==='#all'}"><a href="#all">所有任务</a></li>
+              <li role="presentation" :class="{active:hash==='#finish'}"><a href="#finish">已完成</a></li>
+              <li role="presentation" :class="{active:hash==='#unfinish'}"><a href="#unfinish">未完成</a></li>
+            </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+
+  <script>
+    let vm = new Vue({
+      el:"#wrap",
+      data:{
+        msg:"",
+        hash:"#all",
+        arr:[
+          {
+            isSelected:false,
+            things:"吃饭",
+            isDB:false
+          }
+        ]
+      },
+      methods:{
+        add(){
+            this.arr.push({
+              isSelected:false,
+              things:this.msg,
+              isDB:false
+            })
+          this.msg=''
+        },
+        remove(index){
+          this.arr.splice(index,1)
+        },
+        db(index){
+          this.arr[index].isDB =  !this.arr[index].isDB
+        },
+        ok(index){
+          this.arr[index].isDB = false
+        }
+      },
+      computed:{
+        num(){
+          return this.arr.filter(item=>item.isSelected===false).length
+        },
+        filterArr(){
+          if(this.hash==='#finish')
+            return this.arr.filter(item=>item.isSelected===true)
+          
+          if(this.hash==='#unfinish')
+            return this.arr.filter(item=>item.isSelected===false)
+          
+          return this.arr
+          
+        }
+      },
+      watch:{
+        arr:{
+          handler(){
+            localStorage.setItem("arr",JSON.stringify(this.arr))
+          },
+          deep:true
+        }
+      },
+      //自定义指令
+      directives:{
+        focus(el){
+          el.focus()
+        }
+      },
+      created(){
+        this.arr=JSON.parse(localStorage.getItem("arr")) || []
+        window.addEventListener('hashchange',()=>{
+          this.hash = location.hash
+        })
+      }
+    })
+  
+  </script>
+</body>
+</html>
